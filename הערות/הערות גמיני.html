@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>אפליקציית הערות - עיצוב מודרני</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="top-bar-right">
+        <button id="noteViewBtn" class="btn-icon" title="הערה חדשה">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <span class="app-title">הערות</span>
+      </div>
+      <div class="top-bar-left">
+        <span id="connectionStatus" class="status">מחובר</span>
+        <span class="notes-count"><span id="totalNotesBottom">0</span> פתקים</span>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+      <!-- Main Content Panel -->
+      <div id="textPanel" class="content-panel">
+        <div class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <p>בחר הערה מהרשימה או צור חדשה</p>
+        </div>
+      </div>
+
+      <!-- Note Form Panel - עיצוב חדש כמו אפליקציית כתיבה -->
+      <div id="noteFormPanel" class="content-panel note-editor-panel" style="display: none;">
+        <div class="note-editor-container">
+          <form id="noteForm">
+            <!-- Toolbar עליון -->
+            <div class="editor-toolbar">
+              <div class="toolbar-left">
+                <button type="button" class="toolbar-btn" id="clearBtn" title="נקה">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="toolbar-center">
+                <div class="owner-display">
+                  <input type="number" id="owner" value="199238" />
+                </div>
+                <label class="public-toggle">
+                  <input type="checkbox" id="isPublic" checked />
+                  <span>ציבורי</span>
+                </label>
+              </div>
+              <div class="toolbar-right">
+                <button type="submit" id="saveBtn" class="btn-save">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  שמור
+                </button>
+              </div>
+            </div>
+
+            <!-- אזור התיוג -->
+            <div class="tags-toolbar">
+              <div class="tags-section">
+                <button type="button" class="tag-type-btn active" data-target-type="ref">
+                  📖 מקור
+                </button>
+                <button type="button" class="tag-type-btn" data-target-type="word">
+                  🔤 מילה
+                </button>
+                <button type="button" class="tag-type-btn" data-target-type="topic">
+                  💡 נושא
+                </button>
+              </div>
+
+              <div class="tag-input-area">
+                <div id="inputRefContainer" class="tag-input-row">
+                  <input type="text" id="refInput" placeholder="לדוגמה: בראשית נ ד" />
+                  <button type="button" class="btn-add-tag" onclick="addScoreTargetWithApi()">+</button>
+                </div>
+                <div id="inputWordContainer" class="tag-input-row" style="display:none;">
+                  <input type="text" id="wordInput" placeholder="הזן מילה" />
+                  <button type="button" class="btn-add-tag" onclick="addWordTargetFromForm()">+</button>
+                </div>
+                <div id="inputTopicContainer" class="tag-input-row" style="display:none;">
+                  <input type="text" id="topicInput" placeholder="הזן נושא" />
+                  <button type="button" class="btn-add-tag" onclick="addTopicTargetFromForm()">+</button>
+                </div>
+              </div>
+
+              <div id="targetsInfo" class="active-tags"></div>
+            </div>
+
+            <!-- אזור הכתיבה הראשי -->
+            <div class="editor-writing-area">
+              <textarea id="noteContent" placeholder="התחל לכתוב..."></textarea>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Notes List Panel -->
+      <div id="notesListPanel" class="notes-panel">
+        <div class="notes-header">
+          <div class="notes-header-top">
+            <h2>הערות</h2>
+            <button id="settingsToggleBtn" class="btn-icon settings-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m-9-9h6m6 0h6m-3-6.364l-4.243 4.243m0 6.364l4.243 4.243m-12.728 0l4.243-4.243m0-6.364L2.636 5.636"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="search-box">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" id="searchInput" placeholder="חיפוש" />
+          </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+          <button class="category-tab active" data-category="all">הכל</button>
+          <button class="category-tab" data-category="score">מקורות</button>
+          <button class="category-tab" data-category="topic">נושאים</button>
+          <button class="category-tab" data-category="word">מילים</button>
+        </div>
+
+        <!-- Notes List - עם גלילה -->
+        <div class="notes-list-scroll">
+          <div class="notes-list">
+            <div id="allNotes" class="notes-category"></div>
+            <div id="scoreNotesContainer" class="notes-category" style="display:none;"></div>
+            <div id="topicNotesContainer" class="notes-category" style="display:none;"></div>
+            <div id="wordNotesContainer" class="notes-category" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Panel -->
+      <div id="settingsPanel" class="settings-panel">
+        <div class="settings-header">
+          <h3>הגדרות</h3>
+          <button id="settingsCloseBtn" class="btn-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="settings-content">
+          <div class="settings-section">
+            <h4 class="settings-section-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+              סינון
+            </h4>
+            <div class="filter-buttons">
+              <button class="filter-btn active" data-filter="all">
+                <span>הכל</span>
+                <span id="totalNotes" class="filter-count">0</span>
+              </button>
+              <button class="filter-btn" data-filter="score">
+                <span>מקורות</span>
+                <span id="scoreNotes" class="filter-count">0</span>
+              </button>
+              <button class="filter-btn" data-filter="topic">
+                <span>נושאים</span>
+                <span id="topicNotes" class="filter-count">0</span>
+              </button>
+              <button class="filter-btn" data-filter="word">
+                <span>מילים</span>
+                <span id="wordNotes" class="filter-count">0</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h4 class="settings-section-title">סטטיסטיקות</h4>
+            <div class="stats-list">
+              <div class="stat-item">
+                <span>סה"כ הערות</span>
+                <span class="stat-value" id="statTotal">0</span>
+              </div>
+              <div class="stat-item">
+                <span>הערות מקור</span>
+                <span class="stat-value" id="statScore">0</span>
+              </div>
+              <div class="stat-item">
+                <span>הערות נושא</span>
+                <span class="stat-value" id="statTopic">0</span>
+              </div>
+              <div class="stat-item">
+                <span>הערות מילה</span>
+                <span class="stat-value" id="statWord">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Files -->
+  <script src="js/globals.js"></script>
+  <script src="js/view.js"></script>
+  <script src="js/targets.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/firebase.js"></script>
+  <script src="js/init.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
